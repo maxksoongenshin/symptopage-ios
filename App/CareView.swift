@@ -150,6 +150,8 @@ struct ObservationDetail: View {
   @State private var addVisit = false
   @State private var edit = false
   @State private var medication = false
+  @State private var confirmDelete = false
+  @Environment(\.dismiss) private var dismiss
   var body: some View {
     if let o = store.state.observations.first(where: { $0.id == observationID }) {
       SoftScreen {
@@ -213,13 +215,23 @@ struct ObservationDetail: View {
             }
           }
         }.buttonStyle(SecondaryButton())
-        Text(
-          store.t(
-            "Archiving preserves history and does not stop medication courses. Stop a course separately if appropriate.",
-            "Archiwizacja zachowuje historię i nie zatrzymuje kuracji. W razie potrzeby zakończ kurację osobno."
-          )
-        ).font(.brand(.footnote)).foregroundStyle(Theme.muted)
+        Button(store.t("Delete doctor", "Usuń lekarza"), role: .destructive) { confirmDelete = true }
+          .buttonStyle(SecondaryButton(fill: true)).accessibilityIdentifier("deleteObservation")
       }.navigationTitle(store.t("Observation", "Obserwacja"))
+        .confirmationDialog(
+          store.t("Delete this doctor?", "Usunąć tego lekarza?"), isPresented: $confirmDelete,
+          titleVisibility: .visible
+        ) {
+          Button(store.t("Delete", "Usuń"), role: .destructive) {
+            if store.deleteObservation(o.id) { dismiss() }
+          }
+          Button(store.t("Cancel", "Anuluj"), role: .cancel) {}
+        } message: {
+          Text(
+            store.t(
+              "Visits and medication for this doctor will be removed. Symptoms stay in the journal.",
+              "Wizyty i leki tego lekarza zostaną usunięte. Objawy zostaną w dzienniku."))
+        }
         .sheet(isPresented: $addVisit) { VisitForm(visit: Visit(observationID: o.id, date: .now)) }
         .sheet(isPresented: $edit) {
           ObservationEditForm(observation: o, doctor: store.state.doctor(for: o.id)!)

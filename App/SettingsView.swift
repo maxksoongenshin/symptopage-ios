@@ -72,6 +72,9 @@ struct SettingsView: View {
                   _ = store.change { $0.remindersEnabled = false }
                 }
               }))
+          Button(store.t("Send a test notification", "Wyślij testowe powiadomienie")) {
+            Task { await store.sendTestNotification() }
+          }.accessibilityIdentifier("testNotification")
           #if os(iOS)
             Link(
               store.t("System notification settings", "Systemowe ustawienia powiadomień"),

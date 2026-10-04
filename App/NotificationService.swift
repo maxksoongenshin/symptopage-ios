@@ -6,6 +6,31 @@ import UserNotifications
 #endif
 
 @MainActor final class NotificationService {
+  #if os(iOS)
+    /// Shows banners while the app is open too (otherwise iOS hides them in the foreground).
+    final class Presenter: NSObject, UNUserNotificationCenterDelegate {
+      func userNotificationCenter(
+        _ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+        withCompletionHandler done: @escaping (UNNotificationPresentationOptions) -> Void
+      ) { done([.banner, .list, .sound]) }
+    }
+    private let presenter = Presenter()
+    init() { UNUserNotificationCenter.current().delegate = presenter }
+  #endif
+  func test(_ l: Language) async {
+    #if os(iOS)
+      let content = UNMutableNotificationContent()
+      content.title = "SymptoPage"
+      content.body = l.text(
+        "How are you feeling? Tap \"Now!\" if a symptom appears.",
+        "Jak się czujesz? Stuknij „Teraz!”, jeśli pojawi się objaw.")
+      content.sound = .default
+      try? await UNUserNotificationCenter.current().add(
+        UNNotificationRequest(
+          identifier: "symptopage.test." + UUID().uuidString, content: content,
+          trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)))
+    #endif
+  }
   private var pendingTask: Task<String, Never>?
   func authorize() async throws -> Bool {
     #if os(iOS)
@@ -65,6 +90,39 @@ import UserNotifications
           trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false))
       }
       for d in doses { requests.append(request(id: d.id, date: d.date, visit: false)) }
+      // Morning of the visit, 8:00.
+      for v in visits {
+        let morning = Calendar.current.date(
+          bySettingHour: 8, minute: 0, second: 0, of: v.date) ?? v.date
+        if morning > Date() && morning < v.date {
+          let content = UNMutableNotificationContent()
+          content.title = "SymptoPage"
+          content.body = l.text(
+            "Visit today. Your report is ready in the Report tab.",
+            "Wizyta dzisiaj. Raport czeka w zakładce Raport.")
+          content.sound = .default
+          var c = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: morning)
+          c.timeZone = Calendar.current.timeZone
+          requests.append(
+            UNNotificationRequest(
+              identifier: "symptopage.visitday." + v.id.uuidString, content: content,
+              trigger: UNCalendarNotificationTrigger(dateMatching: c, repeats: false)))
+        }
+      }
+      // Daily question at 20:00 while any observation is active.
+      if s.observations.contains(where: { !$0.archived && $0.stage != .completed }) {
+        let content = UNMutableNotificationContent()
+        content.title = "SymptoPage"
+        content.body = l.text(
+          "Daily question: did your symptoms appear today?",
+          "Pytanie dnia: czy objawy pojawiły się dzisiaj?")
+        content.sound = .default
+        requests.append(
+          UNNotificationRequest(
+            identifier: "symptopage.daily", content: content,
+            trigger: UNCalendarNotificationTrigger(
+              dateMatching: DateComponents(hour: 20, minute: 0), repeats: true)))
+      }
       for v in visits {
         requests.append(
           request(

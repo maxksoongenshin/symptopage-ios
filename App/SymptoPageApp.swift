@@ -19,6 +19,11 @@ import SwiftUI
           await store.refreshNotifications()
           await store.autoSync()
         }
+        .onChange(of: store.state.observations.count) { old, new in
+          if old == 0 && new > 0 && !store.state.remindersEnabled {
+            Task { await store.enableNotifications() }
+          }
+        }
         .onChange(of: phase) { _, value in
           if value == .active {
             Task {

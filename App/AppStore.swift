@@ -104,6 +104,36 @@ import Foundation
     guard revision == notificationRevision, language == state.language else { return }
     notificationStatus = status
   }
+  /// Removes an observation with its visits, check-ins and medication courses. Symptom events and
+  /// notes stay in the journal, only unlinked. The doctor goes too when nothing else refers to it.
+  @discardableResult func deleteObservation(_ id: UUID) -> Bool {
+    let ok = change { s in
+      guard let o = s.observations.first(where: { $0.id == id }) else { return }
+      s.observations.removeAll { $0.id == id }
+      s.visits.removeAll { $0.observationID == id }
+      s.checkIns.removeAll { $0.observationID == id }
+      let meds = Set(
+        s.medications.filter { m in
+          m.plan.observationID == id || m.history.contains { $0.plan.observationID == id }
+        }.map(\.id))
+      s.medications.removeAll { meds.contains($0.id) }
+      s.doses.removeAll { meds.contains($0.medicationID) }
+      for i in s.events.indices { s.events[i].observationIDs.removeAll { $0 == id } }
+      for i in s.notes.indices { s.notes[i].observationIDs.removeAll { $0 == id } }
+      let linked = Set(s.visits.flatMap(\.attachmentIDs))
+      s.attachments.removeAll { !linked.contains($0.id) }
+      if !s.observations.contains(where: { $0.doctorID == o.doctorID }) {
+        s.doctors.removeAll { $0.id == o.doctorID }
+      }
+    }
+    selectedDoctors = selectedDoctors.filter { d in state.doctors.contains { $0.id == d } }
+    Task { await refreshNotifications() }
+    return ok
+  }
+  func sendTestNotification() async {
+    if !state.remindersEnabled { await enableNotifications() }
+    await notifications.test(state.language)
+  }
   func enableNotifications() async {
     do {
       let granted = try await notifications.authorize()

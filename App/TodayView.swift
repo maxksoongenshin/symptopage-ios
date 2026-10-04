@@ -15,6 +15,7 @@ struct TodayView: View {
   @State private var openJournal = false
   @State private var openCare = false
   @State private var page: String?
+  @State private var deleting: Observation?
   var body: some View {
     ZStack(alignment: .bottomTrailing) {
       if active.isEmpty { emptyLayout } else { activeLayout }
@@ -40,6 +41,19 @@ struct TodayView: View {
     .sheet(isPresented: $addNote) { NoteForm() }
     .navigationDestination(isPresented: $openJournal) { JournalView() }
     .navigationDestination(isPresented: $openCare) { CareView() }
+    .confirmationDialog(
+      store.t("Delete this doctor?", "Usunąć tego lekarza?"),
+      isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+      titleVisibility: .visible, presenting: deleting
+    ) { o in
+      Button(store.t("Delete", "Usuń"), role: .destructive) { store.deleteObservation(o.id) }
+      Button(store.t("Cancel", "Anuluj"), role: .cancel) {}
+    } message: { _ in
+      Text(
+        store.t(
+          "Visits and medication for this doctor will be removed. Symptoms stay in the journal.",
+          "Wizyty i leki tego lekarza zostaną usunięte. Objawy zostaną w dzienniku."))
+    }
   }
 
   /// Shortcuts that replace the former Care and Journal tabs (design has three tabs).
@@ -132,6 +146,11 @@ struct TodayView: View {
       HStack(alignment: .top, spacing: 12) {
         ForEach(active) { observation in
           ObservationCard(observation: observation, visit: nextVisit(observation.id))
+            .contextMenu {
+              Button(store.t("Delete doctor", "Usuń lekarza"), systemImage: "trash", role: .destructive) {
+                deleting = observation
+              }
+            }
             .containerRelativeFrame(.horizontal) { width, _ in min(width - 64, 420) }
             .id(observation.id.uuidString)
         }
