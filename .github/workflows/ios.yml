@@ -47,6 +47,8 @@ jobs:
           cp -R build/DerivedData/Build/Products/Release-iphoneos/SymptoPage.app build/ipa/Payload/
           # Free-account sideloading (Sideloadly) cannot sign the embedded watch binary.
           rm -rf build/ipa/Payload/SymptoPage.app/Watch
+          # Ad-hoc signature carries the HealthKit entitlement; Sideloadly keeps it when re-signing.
+          codesign -f -s - --entitlements Configuration/HealthKit.entitlements build/ipa/Payload/SymptoPage.app
           (cd build/ipa && zip -qr ../SymptoPage-unsigned.ipa Payload)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
