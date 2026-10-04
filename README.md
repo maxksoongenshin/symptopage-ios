@@ -1,73 +1,40 @@
-# SymptoPage · iOS 0.8.0 + Apple Watch
+# SymptoPage 1.0 · iOS
 
-Нативное приложение на SwiftUI для iPhone/iPad с English / Polski. Локальный дневник симптомов, подготовка к визиту и выполнение записанных назначений. Без медицинских демоданных, аккаунтов и аналитики. Сеть используется только для Strava и только после подключения пользователем.
+**Record symptoms. Show your doctor.** A private symptom journal for iPhone (SwiftUI, iOS 17+, English / Polski) that turns everyday observations into a clear report for the next visit.
 
-**Открыть код:** `SymptoPage.xcodeproj` в Xcode. Точка входа — `App/SymptoPageApp.swift`. В этом файле есть Canvas Preview. Подробности: [IOS_SETUP_RU.md](IOS_SETUP_RU.md) и [CODE_GUIDE_RU.md](CODE_GUIDE_RU.md).
+## Install on iPhone (no Xcode)
 
-**Посмотреть сейчас на Mac:** рядом с папкой исходников находится `SymptoPage-iOS-Preview.app`. Это скомпилированный предпросмотр тех же SwiftUI-экранов с отдельным хранилищем. Он не является iOS Simulator и не проверяет поведение iPhone.
+1. Download `SymptoPage-iPhone-1.0.ipa` from [Releases](https://github.com/maxksoongenshin/symptopage-ios/releases/latest).
+2. Install [Sideloadly](https://sideloadly.io), connect the iPhone by cable, enable *Settings → Privacy & Security → Developer Mode*.
+3. Drag the `.ipa` into Sideloadly, enter your Apple ID, press **Start**.
+4. On the iPhone: *Settings → General → VPN & Device Management* → trust your Apple ID.
 
-## Реализовано
+A free Apple ID works; the app then runs for 7 days and can be re-installed without losing data.
 
-- **0.8.0:** Apple Watch (приложение на часах: «!!! Teraz!» в одно касание, сила колёсиком, пульс, вопрос дня, настроение), импорт из Apple Health (пульс покоя, HRV, шаги, сон, тренировки, пульс в момент симптома) и Strava (тренировки по официальному API). Всё синхронизируется само при открытии приложения и попадает в PDF с графиками. Подключение: Ustawienia → Integracje.
-- **0.7.0:** три вкладки как в макете (Start, Raport, Ustawienia); шрифт Manrope из `ekrany.zip`; каталог из 30 симптомов в 8 категориях и 16 специальностей с типичными вопросами; заметки о самочувствии (настроение, текст, теги, связь с врачами); единый дневник по дням; новые кнопки; оформленный PDF (шапка, плитки, таблица симптомов, сетка ежедневных ответов, «Strona X / N»).
-- **0.6.0:** интерфейс по присланным экранам дизайна (`work/design-reference/ekrany`): экран приветствия, стартовый экран с быстрым добавлением визита, карусель активных наблюдений со счётчиком дней и ежедневным вопросом «Nie / Raz / Kilka», карточка «Dodaj wizytę», плавающая кнопка «!!! Teraz!». Имя для приветствия задаётся в настройках.
+## Run from source
 
-- Несколько врачей, наблюдений и повторных визитов; общий и множественный фильтр.
-- Этапы: ожидание → после визита → назначения → контроль → завершение.
-- Now / Teraz: событие, время, собственный симптом, заметка, интенсивность, длительность, контекст, несколько связей.
-- Ежедневная оценка частоты и самочувствия; отдельно от событий. Редактирование и удаление.
-- Результат визита, вопросы, рекомендации, обследования, документы PDF/изображения.
-- Курсы лекарств: назначенная дозировка, период, дни недели, несколько времён, подтверждения, пропуск и отсрочка.
-- iOS local notifications с приватным текстом и видимым сроком очереди. Требуют проверки на устройстве.
-- Предварительный просмотр, экспорт PDF и вызов системной печати на iOS.
-- Полная резервная копия с вложениями; проверяемый импорт; миграция Windows 0.4.0.
-- Логотип и обе иконки, предоставленные владельцем. Синяя используется для AppIcon.
+Open `SymptoPage.xcodeproj` in Xcode 16+, choose the scheme **SymptoPage** and an iPhone simulator, press **Run**. Entry point: `App/SymptoPageApp.swift`. No account, server or API keys are needed.
 
-## Проверено в этой среде
+## Features
 
-- Компиляция общего SwiftUI-приложения как macOS preview, Swift 6.3.2 / режим Swift 5.
-- 33 автоматические проверки ядра, включая файловые ошибки, миграцию, отношения, DST и PDF с польскими символами на многих страницах.
-- Отдельная проверка компиляции UserNotifications-адаптера против доступного macOS SDK.
-- Валидация структуры Xcode project и privacy manifest.
+- **"!!! Now!"** – record a symptom in one tap: time, intensity, duration, note.
+- **Doctors and visits** – countdown to each visit, one daily question per doctor (None / Once / Several), delete a doctor with a long press.
+- **Symptom trend** – chart of symptoms per day for 7 / 14 / 30 days with the change against the previous period.
+- **Report for the doctor** – designed PDF with summary, symptom table and daily-answer grid; print or share.
+- **Medication** – courses, dose confirmations and reminders.
+- **Notifications** – daily question at 20:00, visit reminders the day before and in the morning, medication reminders, test notification in Settings.
+- **Apple Health** – resting heart rate, HRV, sleep and steps next to your symptoms (read-only).
+- **Private** – data stays on the device; no login, no analytics; backup and restore.
 
-Полного Xcode, iOS SDK и Simulator здесь нет. **iOS-сборка, UI-тесты в Simulator, доставка уведомлений и печать на реальном iPhone пока не проверены.** CI и UI-тесты подготовлены, но удалённый CI для этого проекта не запускался. Полный статус: [docs/VALIDATION.md](docs/VALIDATION.md).
+## Project structure
 
-## Проверки и сборка
+| Folder | Contents |
+|---|---|
+| `App/` | iPhone UI (SwiftUI), storage access, notifications, HealthKit |
+| `Core/` | Models, validation, persistence, scheduling, PDF report |
+| `Tests/`, `UITests/` | Core tests and UI tests |
+| `scripts/` | Project generator and checks (`bash scripts/check_all.sh`) |
 
-Одна команда для всего, что проверяется без полного Xcode (ядро, AppStore, проект, сборка превью, отрисовка 38 экранов на EN/PL):
+Developer notes in Russian: [docs/DEVELOPMENT_RU.md](docs/DEVELOPMENT_RU.md).
 
-```sh
-bash scripts/check_all.sh
-```
-
-На Mac с Xcode:
-
-```sh
-swift test
-bash scripts/check_ios.sh
-```
-
-Только с Command Line Tools, без XCTest:
-
-```sh
-python3 scripts/check_core.py
-bash scripts/build_preview.sh
-```
-
-`check_core.py` компилирует и исполняет те же тела тестов через небольшой CLI-runner; он не имитирует результаты XCTest или Simulator.
-
-## Ограничения
-
-- Нет автоматической оценки срочности, диагнозов или вывода о выздоровлении. Раздел помощи не анализирует симптомы.
-- Нет облака и синхронизации между устройствами, кроме связки iPhone ↔ Apple Watch. Apple Health только читается.
-- Strava требует собственное API-приложение владельца (strava.com/settings/api, Authorization Callback Domain = `localhost`). Client Secret хранится в Keychain устройства; для публичного выпуска обмен токенов нужно перенести на сервер.
-- Напоминания планируются на ближайшие 30 дней, до 48 лекарственных событий и 8 визитов. Приложение показывает фактический срок очереди. Открывайте его регулярно для продления.
-- Изменение расписания действует с момента сохранения. Предыдущие планы и дозировки сохраняются; автоматического исправления уже записанной истории нет.
-- При импорте заменяется весь набор данных с сохранением предыдущего файла; слияние двух устройств не реализовано.
-- Импорт старого macOS `LocalRecordRepository` не поддерживается; поддержан Windows JSON версии 1 и iOS JSON версий 2 и 3.
-- Документы не распознаются автоматически. Пользователь вводит назначения и проверяет их сам.
-- Полный логотип имеет 545×132 px, иконки 132×130 px. AppIcon подготовлен в 1024×1024 без альфа-канала; увеличение не добавляет деталей. Для окончательного выпуска желательно заменить источником высокого разрешения.
-- Дизайн коллеги получен как HTML-макеты 4 экранов и перенесён в SwiftUI вручную; HTML в приложение не встраивается. Название в макете «SymptoPad» заменено на бренд владельца SymptoPage. Шрифт Manrope взят из `ekrany.zip` (два woff2-подмножества объединены в 4 статических TTF без изменения начертаний; лицензия Manrope — SIL OFL).
-- «Tętno spocz.» из макета показывается, когда подключён Apple Health. Вкладок три, как в макете. Порядок взят с экрана 2 (Start, Raport, Ustawienia); на экране 3 макета порядок другой.
-
-Лицензионные документы не добавлялись по просьбе владельца.
+SymptoPage records personal observations. It does not provide a diagnosis.
