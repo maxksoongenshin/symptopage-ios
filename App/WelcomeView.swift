@@ -42,9 +42,6 @@ struct WelcomeView: View {
             .frame(maxWidth: .infinity, minHeight: 56).foregroundStyle(.white)
             .background(Theme.teal, in: Capsule()).contentShape(Capsule())
         }.buttonStyle(.plain).accessibilityIdentifier("startOnboarding")
-        Button(store.t("Try with demo data", "Wypróbuj z danymi demo")) { store.loadDemo() }
-          .buttonStyle(.plain).font(.brand(.subheadline, .bold)).foregroundStyle(Theme.teal)
-          .frame(maxWidth: .infinity, minHeight: 36).accessibilityIdentifier("tryDemo")
       }.padding(.horizontal, 24).padding(.top, 32).padding(.bottom, 28)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(
