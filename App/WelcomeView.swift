@@ -24,9 +24,9 @@ struct WelcomeView: View {
             .font(.brand(size: 26, .heavy))
         }
         VStack(alignment: .leading, spacing: 14) {
-          feature("heart", store.t("Daily symptom questions, in seconds", "Codzienne pytania o objawy, w kilka sekund"))
-          feature("pencil", store.t("Notes about how you feel in one place", "Notatki o samopoczuciu w jednym miejscu"))
-          feature("doc.text", store.t("A ready report for your visit", "Gotowy raport dla lekarza na wizytę"))
+          feature("heart", store.t("One question a day", "Jedno pytanie dziennie"))
+          feature("pencil", store.t("Notes on how you feel", "Notatki o samopoczuciu"))
+          feature("doc.text", store.t("A report for your doctor", "Raport dla lekarza"))
         }
         Spacer(minLength: 0)
         HStack(spacing: 8) {
@@ -65,7 +65,7 @@ struct WelcomeView: View {
       Image(systemName: icon).font(.brand(size: 20, .semibold)).foregroundStyle(Theme.teal)
         .frame(width: 44, height: 44).background(Theme.chip, in: RoundedRectangle(cornerRadius: 14))
         .accessibilityHidden(true)
-      Text(text).font(.brand(.body, .semibold))
+      Text(text).font(.brand(.body, .semibold)).fixedSize(horizontal: false, vertical: true)
     }
   }
 }

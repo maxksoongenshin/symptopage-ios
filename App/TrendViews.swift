@@ -65,7 +65,7 @@ struct SymptomTrendCard: View {
         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) }
         .chartXAxis {
           AxisMarks(values: .stride(by: .day, count: range > 14 ? 7 : range > 7 ? 3 : 1)) { _ in
-            AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+            AxisValueLabel(format: .dateTime.day().month(.abbreviated).locale(store.language.locale))
           }
         }
         .chartLegend(position: .bottom, alignment: .leading)

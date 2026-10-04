@@ -40,7 +40,7 @@ struct HealthSummaryCard: View {
           metric(today?.steps.map { $0.formatted(.number.locale(store.language.locale)) } ?? "—", store.t("steps", "kroki"), "figure.walk", Theme.teal)
           metric(lastNight?.sleepMinutes.map { store.language.duration($0 * 60) } ?? "—", store.t("sleep", "sen"), "moon.zzz.fill", Color(hex: 0x5AA9D6))
         }
-        if let last {
+        if let last, last.source != .strava {
           HStack(spacing: 10) {
             Image(systemName: last.source.icon).foregroundStyle(.white).frame(width: 30, height: 30)
               .background(last.source.color, in: RoundedRectangle(cornerRadius: 9))

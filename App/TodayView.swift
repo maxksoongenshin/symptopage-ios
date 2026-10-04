@@ -107,11 +107,11 @@ struct TodayView: View {
         carousel
         dots
         actions.padding(.horizontal, 20)
+        SymptomTrendCard().padding(.horizontal, 20)
         healthCard.padding(.horizontal, 20)
         if !todayDoses.isEmpty {
           MedicationPlanCard(doses: todayDoses).padding(.horizontal, 20)
         }
-        SymptomTrendCard().padding(.horizontal, 20)
         recent.padding(.horizontal, 20)
       }.padding(.top, 20).padding(.bottom, 96).frame(maxWidth: 700).frame(maxWidth: .infinity)
     }
