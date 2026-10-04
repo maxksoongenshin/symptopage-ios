@@ -1,0 +1,80 @@
+name: iOS build, tests and IPA
+on:
+  workflow_dispatch:
+    inputs:
+      tests:
+        description: "Also run core and simulator tests"
+        type: boolean
+        default: false
+      testflight:
+        description: "Upload to TestFlight (needs App Store Connect secrets)"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  checks:
+    if: inputs.tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Core, render and project checks
+        run: bash scripts/check_all.sh
+      - name: Simulator build and UI tests
+        run: bash scripts/check_ios.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: iOS-test-results
+          path: ${{ runner.temp }}/SymptoPage-*.xcresult
+          if-no-files-found: ignore
+
+  # Unsigned .ipa (iPhone app with the Apple Watch app inside). Sign it on your computer with
+  # your free Apple ID using Sideloadly or AltStore; or use the TestFlight job below.
+  unsigned-ipa:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build for device without signing
+        run: |
+          python3 scripts/generate_project.py
+          xcodebuild -project SymptoPage.xcodeproj -scheme SymptoPage -configuration Release \
+            -destination generic/platform=iOS -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+          mkdir -p build/ipa/Payload
+          cp -R build/DerivedData/Build/Products/Release-iphoneos/SymptoPage.app build/ipa/Payload/
+          (cd build/ipa && zip -qr ../SymptoPage-unsigned.ipa Payload)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: SymptoPage-unsigned-ipa
+          path: build/SymptoPage-unsigned.ipa
+
+  # Paid Apple Developer Program. Secrets: APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID,
+  # ASC_KEY_P8 (contents of the .p8 API key, role App Manager). Optional: STRAVA_CLIENT_ID, STRAVA_TOKEN_URL.
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Archive and upload
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_TOKEN_URL: ${{ secrets.STRAVA_TOKEN_URL }}
+        run: |
+          key="$RUNNER_TEMP/AuthKey.p8"; printf '%s' "$KEY_P8" > "$key"
+          auth=(-allowProvisioningUpdates -authenticationKeyPath "$key" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
+          python3 scripts/generate_project.py
+          xcodebuild -project SymptoPage.xcodeproj -scheme SymptoPage -configuration Release \
+            -destination generic/platform=iOS -archivePath build/SymptoPage.xcarchive "${auth[@]}" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            STRAVA_CLIENT_ID="$STRAVA_CLIENT_ID" STRAVA_TOKEN_URL="$STRAVA_TOKEN_URL" archive
+          printf '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>method</key><string>app-store-connect</string><key>destination</key><string>upload</string><key>teamID</key><string>%s</string><key>signingStyle</key><string>automatic</string></dict></plist>' "$TEAM" > build/ExportOptions.plist
+          xcodebuild -exportArchive -archivePath build/SymptoPage.xcarchive -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist "${auth[@]}"
