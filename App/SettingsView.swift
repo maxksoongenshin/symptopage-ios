@@ -18,6 +18,8 @@ struct SettingsView: View {
   @State private var importSummary = ""
   @State private var confirmImport = false
   @State private var name = ""
+  @State private var confirmDemo = false
+  @State private var confirmClear = false
   private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
   var body: some View {
     Form {
@@ -106,6 +108,32 @@ struct SettingsView: View {
               store.t("Call 112 (Poland / EU)", "Zadzwoń pod 112 (Polska / UE)"),
               destination: URL(string: "tel:112")!)
           #endif
+        }
+        Section(store.t("Demo", "Demo")) {
+          Button {
+            confirmDemo = true
+          } label: {
+            Label(store.t("Load demo data", "Wczytaj dane demo"), systemImage: "sparkles")
+          }.accessibilityIdentifier("loadDemo")
+          Button(role: .destructive) {
+            confirmClear = true
+          } label: {
+            Label(store.t("Clear all data", "Usuń wszystkie dane"), systemImage: "trash")
+          }.accessibilityIdentifier("clearAll")
+        }
+        .confirmationDialog(
+          store.t("Replace your data with demo data?", "Zastąpić Twoje dane danymi demo?"),
+          isPresented: $confirmDemo, titleVisibility: .visible
+        ) {
+          Button(store.t("Load demo", "Wczytaj demo")) { store.loadDemo() }
+          Button(store.t("Cancel", "Anuluj"), role: .cancel) {}
+        }
+        .confirmationDialog(
+          store.t("Delete all data?", "Usunąć wszystkie dane?"), isPresented: $confirmClear,
+          titleVisibility: .visible
+        ) {
+          Button(store.t("Delete everything", "Usuń wszystko"), role: .destructive) { store.clearAll() }
+          Button(store.t("Cancel", "Anuluj"), role: .cancel) {}
         }
         Section {
           Text(
