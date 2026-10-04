@@ -29,7 +29,7 @@ struct HealthSummaryCard: View {
     } label: {
       VStack(alignment: .leading, spacing: 14) {
         HStack {
-          Label(store.t("From your watch & Strava", "Z zegarka i Strava"), systemImage: "applewatch")
+          Label("Apple Health", systemImage: "heart.text.square")
             .font(.brand(.headline))
           Spacer()
           if store.syncing { ProgressView().controlSize(.small) }
@@ -141,7 +141,7 @@ struct HealthView: View {
           "Values are shown as recorded by your devices. The app does not interpret them.",
           "Wartości są pokazane tak, jak zapisały je urządzenia. Aplikacja ich nie interpretuje.")
       ).font(.brand(.footnote)).foregroundStyle(Theme.muted)
-    }.navigationTitle(store.t("Watch & Strava", "Zegarek i Strava"))
+    }.navigationTitle(store.t("Body & activity", "Ciało i aktywność"))
   }
   private var days: [HealthDay] {
     let from = Day.key(Date().addingTimeInterval(-Double(range - 1) * 86400))
@@ -233,17 +233,11 @@ struct IntegrationsView: View {
   @State private var confirmHealth = false
   var body: some View {
     SoftScreen {
-      Text(store.t("Connections", "Integracje")).font(.brand(.largeTitle))
-      Text(
-        store.t(
-          "Connect once — the app then imports data by itself every time you open it.",
-          "Połącz raz — potem aplikacja sama pobiera dane przy każdym otwarciu.")
-      ).font(.brand(.subheadline)).foregroundStyle(Theme.muted)
-      card(icon: "heart.text.square.fill", color: Color(hex: 0xFF2D55), title: "Apple Health · Apple Watch") {
+      card(icon: "heart.text.square.fill", color: Color(hex: 0xFF2D55), title: "Apple Health") {
         Text(
           store.t(
-            "Reads resting heart rate, heart rate, HRV, steps, sleep and workouts. Heart rate at the time of each symptom is added automatically. Nothing is written to Health.",
-            "Odczytuje tętno spoczynkowe, tętno, HRV, kroki, sen i treningi. Tętno w chwili objawu dodaje się automatycznie. Nic nie jest zapisywane w Zdrowiu.")
+            "Heart rate, sleep and steps next to your symptoms. Read-only.",
+            "Tętno, sen i kroki obok Twoich objawów. Tylko odczyt.")
         ).font(.brand(.subheadline))
         if store.state.integrations.healthEnabled {
           status(store.t("Connected", "Połączono"), store.state.integrations.lastHealthSync)
@@ -260,55 +254,7 @@ struct IntegrationsView: View {
           }
         }
       }
-      card(icon: "figure.run", color: Color(hex: 0xFC4C02), title: "Strava") {
-        if let athlete = store.state.integrations.stravaAthlete {
-          status(store.t("Connected: ", "Połączono: ") + athlete, store.state.integrations.lastStravaSync)
-          HStack {
-            Button(store.t("Sync now", "Synchronizuj")) { Task { await store.autoSync(force: true) } }
-              .buttonStyle(SecondaryButton())
-            Button(store.t("Disconnect", "Odłącz"), role: .destructive) { confirmStrava = true }.buttonStyle(SecondaryButton())
-          }
-        } else if let builtIn = StravaService.builtIn {
-          Text(
-            store.t(
-              "Your workouts with time, distance and heart rate will appear in the report automatically.",
-              "Treningi z czasem, dystansem i tętnem będą automatycznie trafiać do raportu.")
-          ).font(.brand(.subheadline))
-          Button {
-            Task { await store.connectStrava(builtIn) }
-          } label: {
-            Label(store.t("Connect Strava", "Połącz Strava"), systemImage: "link")
-          }.buttonStyle(PrimaryButton(coral: true)).accessibilityIdentifier("connectStrava")
-        } else {
-          Text(
-            store.t(
-              "1. On strava.com/settings/api create an app; set Authorization Callback Domain to \"localhost\".\n2. Paste its Client ID and Client Secret below.\n3. Tap Connect and allow access to activities.",
-              "1. Na strava.com/settings/api utwórz aplikację; w polu Authorization Callback Domain wpisz \"localhost\".\n2. Wklej poniżej Client ID i Client Secret.\n3. Stuknij Połącz i zezwól na dostęp do aktywności.")
-          ).font(.brand(.subheadline)).fixedSize(horizontal: false, vertical: true)
-          TextField("Client ID", text: $clientID).textFieldStyle(.roundedBorder).accessibilityIdentifier("stravaClientID")
-          SecureField("Client Secret", text: $secret).textFieldStyle(.roundedBorder).accessibilityIdentifier("stravaSecret")
-          Button {
-            Task { await store.connectStrava(.init(clientID: clientID, clientSecret: secret)) }
-          } label: {
-            Label(store.t("Connect Strava", "Połącz Strava"), systemImage: "link")
-          }.buttonStyle(PrimaryButton(coral: true))
-            .disabled(clientID.trimmingCharacters(in: .whitespaces).isEmpty || secret.trimmingCharacters(in: .whitespaces).isEmpty)
-            .accessibilityIdentifier("connectStrava")
-        }
-        Text(
-          store.t(
-            "Client Secret and tokens are kept in the Keychain on this device only and are not included in backups.",
-            "Client Secret i tokeny są przechowywane tylko w pęku kluczy tego urządzenia i nie trafiają do kopii zapasowych.")
-        ).font(.brand(.caption)).foregroundStyle(Theme.muted)
-      }
-      card(icon: "applewatch.watchface", color: Theme.teal, title: "Apple Watch") {
-        Text(
-          store.t(
-            "Install SymptoPage on your watch: record a symptom with one tap (\"Now!\"), answer today's question and mark your mood. Entries reach the iPhone even if it is closed.",
-            "Zainstaluj SymptoPage na zegarku: zapisz objaw jednym dotknięciem („Teraz!”), odpowiedz na pytanie dnia i zaznacz samopoczucie. Wpisy trafią na iPhone'a, nawet gdy aplikacja jest zamknięta.")
-        ).font(.brand(.subheadline))
-      }
-    }.navigationTitle(store.t("Connections", "Integracje"))
+    }.navigationTitle("Apple Health")
       .onAppear {
         clientID = store.strava.credentials?.clientID ?? ""
         secret = store.strava.credentials?.clientSecret ?? ""

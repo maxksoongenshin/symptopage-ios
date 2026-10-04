@@ -45,6 +45,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
           mkdir -p build/ipa/Payload
           cp -R build/DerivedData/Build/Products/Release-iphoneos/SymptoPage.app build/ipa/Payload/
+          # Free-account sideloading (Sideloadly) cannot sign the embedded watch binary.
+          rm -rf build/ipa/Payload/SymptoPage.app/Watch
           (cd build/ipa && zip -qr ../SymptoPage-unsigned.ipa Payload)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

@@ -48,11 +48,6 @@ struct EventForm: View {
         if intensityEnabled {
           Stepper(
             store.t("Intensity", "Nasilenie") + ": \(intensity)/10", value: $intensity, in: 1...10)
-          Text(
-            store.t(
-              "1 = mild, 10 = strongest you can imagine",
-              "1 = łagodne, 10 = najsilniejsze, jakie możesz sobie wyobrazić")
-          ).font(.brand(.caption))
         }
         Toggle(store.t("Record duration", "Zapisz czas trwania"), isOn: $durationEnabled)
         if durationEnabled {
@@ -112,14 +107,7 @@ struct CheckInForm: View {
         SymptomPicker(selection: $symptom, allowCustom: false)
       }
       Section(store.t("How often today?", "Jak często dzisiaj?")) {
-        if symptom.isEmpty {
-          Text(
-            store.t(
-              "Choose a symptom above, then answer the question.",
-              "Wybierz objaw powyżej, a następnie odpowiedz na pytanie."))
-        } else {
-          Text(store.t("Did you experience this symptom today?", "Czy ten objaw wystąpił dzisiaj?"))
-            .font(.brand(.title3))
+        if !symptom.isEmpty {
           Text(store.language.symptom(symptom)).font(.brand(.headline)).foregroundStyle(Theme.teal)
         }
         ChoiceGrid(
@@ -135,12 +123,6 @@ struct CheckInForm: View {
           $0?.title(store.language) ?? store.t("Not specified", "Nie podano")
         }.disabled(symptom.isEmpty)
         TextField(store.t("Note", "Notatka"), text: $note, axis: .vertical)
-        Text(
-          store.t(
-            "Saving updates the check-in for this day, symptom and observation. It does not create an individual symptom event.",
-            "Zapis aktualizuje wpis dla tego dnia, objawu i obserwacji. Nie tworzy pojedynczego zdarzenia objawu."
-          )
-        ).font(.brand(.footnote))
       }
     }.onAppear {
       if !loaded {
@@ -205,18 +187,24 @@ struct SymptomPicker: View {
   private func group(_ title: String, _ keys: [String], id prefix: String = "") -> some View {
     VStack(alignment: .leading, spacing: 8) {
       Text(title).font(.brand(.caption, .bold)).foregroundStyle(Theme.muted)
-      FlowLayout(spacing: 8) {
+      LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
         ForEach(keys, id: \.self) { key in
           let selected = selection == key
           Button {
             selection = key
           } label: {
-            Label(
-              key == "custom" ? store.t("Custom symptom", "Własny objaw") : store.language.symptom(key),
-              systemImage: key == "custom" ? "plus" : Catalog.symptom(key)?.icon ?? "waveform.path.ecg"
-            ).font(.brand(.subheadline, .bold)).padding(.horizontal, 14).frame(minHeight: 40)
+            // Fixed icon column keeps every chip aligned regardless of symbol width.
+            HStack(spacing: 8) {
+              Image(systemName: key == "custom" ? "plus" : Catalog.symptom(key)?.icon ?? "waveform.path.ecg")
+                .font(.system(size: 14, weight: .semibold)).frame(width: 20, height: 20)
+              Text(key == "custom" ? store.t("Custom symptom", "Własny objaw") : store.language.symptom(key))
+                .font(.brand(.footnote, .bold)).lineLimit(2).minimumScaleFactor(0.85)
+                .multilineTextAlignment(.leading)
+              Spacer(minLength: 0)
+            }.padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
               .foregroundStyle(selected ? .white : Theme.chipText)
-              .background(selected ? Theme.teal : Theme.chip, in: Capsule()).contentShape(Capsule())
+              .background(selected ? Theme.teal : Theme.chip, in: RoundedRectangle(cornerRadius: 14))
+              .contentShape(RoundedRectangle(cornerRadius: 14))
           }.buttonStyle(.plain).accessibilityIdentifier(prefix + "symptom-" + key)
             .accessibilityAddTraits(selected ? .isSelected : [])
         }

@@ -10,27 +10,18 @@ struct WelcomeView: View {
   let start: () -> Void
   var body: some View {
     VStack(spacing: 0) {
-      VStack(spacing: 18) {
-        Group {
-          if let icon = brandImage("BrandIconWhite") {
-            icon.resizable().scaledToFit()
-          } else {
-            Image(systemName: "heart.text.square.fill").resizable().scaledToFit().padding(24)
-              .foregroundStyle(.white).background(Theme.teal)
-          }
-        }.frame(width: 112, height: 112).clipShape(RoundedRectangle(cornerRadius: 30))
-          .shadow(color: Theme.ink.opacity(0.18), radius: 14, y: 12).accessibilityHidden(true)
-        Text("SymptoPage").font(.brand(size: 40, .heavy)).accessibilityAddTraits(.isHeader)
-      }.frame(maxWidth: .infinity).frame(minHeight: 300).padding(.top, 20)
+      Group {
+        if let logo = brandImage("BrandLogoWhite") {
+          logo.resizable().scaledToFit().frame(maxWidth: 300)
+        } else {
+          Text("SymptoPage").font(.brand(size: 40, .heavy)).foregroundStyle(.white)
+        }
+      }.padding(.horizontal, 32).frame(maxWidth: .infinity).frame(minHeight: 260).padding(.top, 20)
+        .accessibilityElement().accessibilityLabel("SymptoPage").accessibilityAddTraits(.isHeader)
       VStack(alignment: .leading, spacing: 22) {
         VStack(alignment: .leading, spacing: 10) {
           Text(store.t("Record symptoms.\nShow them to your doctor.", "Zapisuj objawy.\nPokaż je lekarzowi."))
             .font(.brand(size: 26, .heavy))
-          Text(
-            store.t(
-              "A symptom diary that prepares you for your doctor's visit.",
-              "Dziennik objawów, który przygotuje Cię do wizyty u lekarza.")
-          ).font(.brand(.body)).foregroundStyle(Color(hex: 0x3F5559))
         }
         VStack(alignment: .leading, spacing: 14) {
           feature("heart", store.t("Daily symptom questions, in seconds", "Codzienne pytania o objawy, w kilka sekund"))
@@ -61,10 +52,10 @@ struct WelcomeView: View {
     .frame(maxWidth: 700).frame(maxWidth: .infinity)
     .background {
       GeometryReader { proxy in
-        Theme.soft
-        Circle().fill(Color(hex: 0xA6E0DA)).frame(width: 320, height: 320)
+        Theme.hero
+        Circle().fill(.white.opacity(0.06)).frame(width: 320, height: 320)
           .offset(x: proxy.size.width - 210, y: -90)
-        Circle().fill(Color(hex: 0x7CCBC3)).frame(width: 260, height: 260).offset(x: -120, y: 150)
+        Circle().fill(.white.opacity(0.05)).frame(width: 260, height: 260).offset(x: -120, y: 150)
       }.ignoresSafeArea().allowsHitTesting(false).accessibilityHidden(true)
     }
     .foregroundStyle(Theme.ink)

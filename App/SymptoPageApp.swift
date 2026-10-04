@@ -13,6 +13,9 @@ import SwiftUI
         Theme.teal
       ).font(.brand(.body)).preferredColorScheme(.light)
         .task {
+          #if os(iOS)
+            KeyboardDismisser.install()
+          #endif
           await store.refreshNotifications()
           await store.autoSync()
         }
@@ -115,5 +118,37 @@ struct RootView: View {
         .previewLayout(.fixed(width: 390, height: 844)).previewDisplayName(
           "SymptoPage · iPhone layout")
     }
+  }
+#endif
+
+#if os(iOS)
+  import UIKit
+
+  /// Tapping anywhere outside a text field hides the keyboard, in every screen and sheet.
+  final class KeyboardDismisser: NSObject, UIGestureRecognizerDelegate {
+    static let shared = KeyboardDismisser()
+    static func install() {
+      for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+        for window in scene.windows
+        where !(window.gestureRecognizers ?? []).contains(where: { $0.delegate === shared }) {
+          let tap = UITapGestureRecognizer(target: shared, action: #selector(dismiss(_:)))
+          tap.cancelsTouchesInView = false
+          tap.delegate = shared
+          window.addGestureRecognizer(tap)
+        }
+      }
+    }
+    @objc private func dismiss(_ tap: UITapGestureRecognizer) { tap.view?.endEditing(true) }
+    func gestureRecognizer(_ g: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+      var view = touch.view
+      while let v = view {
+        if v is UITextField || v is UITextView { return false }
+        view = v.superview
+      }
+      return true
+    }
+    func gestureRecognizer(
+      _ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
+    ) -> Bool { true }
   }
 #endif

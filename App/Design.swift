@@ -22,6 +22,8 @@ enum Theme {
   static let heart = Color(hex: 0xE8423F)
   static let surface = Color(red: 0.96, green: 0.99, blue: 0.98)
   static let soft = Color(hex: 0xDDF3F0)
+  static let hero = LinearGradient(
+    colors: [Color(hex: 0x0B2E40), Color(hex: 0x167374)], startPoint: .topLeading, endPoint: .bottomTrailing)
   static let background = LinearGradient(
     stops: [
       .init(color: Color(hex: 0x35A5A0), location: 0), .init(color: Color(hex: 0x7FCFC8), location: 0.3),
@@ -53,7 +55,7 @@ struct SoftScreen<Content: View>: View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) { content }.padding(20).frame(maxWidth: 700).frame(
         maxWidth: .infinity)
-    }
+    }.scrollDismissesKeyboard(.interactively)
     .background {
       GeometryReader { proxy in
         Theme.background
@@ -206,12 +208,15 @@ func brandPNG(_ name: String) -> Data? {
 struct Brand: View {
   var body: some View {
     Group {
-      if let logo = brandImage("BrandLogo") {
+      if let logo = brandImage("BrandLogoWhite") {
         logo.resizable().scaledToFit()
       } else {
-        Text("SymptoPage").font(.brand(.title2))
+        Text("SymptoPage").font(.brand(.title2)).foregroundStyle(.white)
       }
-    }.frame(maxWidth: 275, maxHeight: 70, alignment: .leading).accessibilityLabel("SymptoPage")
+    }.frame(maxWidth: 240, maxHeight: 64).padding(.horizontal, 18).padding(.vertical, 12)
+      .frame(maxWidth: .infinity)
+      .background(Theme.hero, in: RoundedRectangle(cornerRadius: 20))
+      .accessibilityLabel("SymptoPage")
   }
 }
 struct EmptyCard: View {
@@ -238,6 +243,7 @@ struct FormShell<Content: View>: View {
   var body: some View {
     NavigationStack {
       Form { content }.formStyle(.grouped).scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.interactively)
         .background(Color(hex: 0xF4FAF9)).navigationTitle(title)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {

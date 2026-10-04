@@ -65,10 +65,8 @@ struct TodayView: View {
   /// Watch / Strava data once something is connected or imported; otherwise a one-tap invitation.
   @ViewBuilder private var healthCard: some View {
     let s = store.state
-    if !s.healthDays.isEmpty || !s.activities.isEmpty || s.integrations.healthEnabled || s.integrations.stravaAthlete != nil {
+    if !s.healthDays.isEmpty || s.integrations.healthEnabled {
       HealthSummaryCard()
-    } else {
-      ConnectPromoCard()
     }
   }
 
@@ -97,13 +95,6 @@ struct TodayView: View {
         actions
         healthCard
         recent
-        Text(
-          store.t(
-            "After adding a visit you will see a day counter and daily symptom questions.",
-            "Po dodaniu wizyty zobaczysz licznik dni i codzienne pytania o objawy.")
-        ).font(.brand(.footnote)).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
-          .frame(maxWidth: .infinity)
-        privacyNote
       }.padding(20).padding(.bottom, 80).frame(maxWidth: 700).frame(maxWidth: .infinity)
     }.background(Color(hex: 0xF7FBFA)).foregroundStyle(Theme.ink)
   }
@@ -120,8 +111,8 @@ struct TodayView: View {
         if !todayDoses.isEmpty {
           MedicationPlanCard(doses: todayDoses).padding(.horizontal, 20)
         }
+        SymptomTrendCard().padding(.horizontal, 20)
         recent.padding(.horizontal, 20)
-        privacyNote.padding(.horizontal, 22)
       }.padding(.top, 20).padding(.bottom, 96).frame(maxWidth: 700).frame(maxWidth: .infinity)
     }
     .background {
@@ -175,7 +166,7 @@ struct TodayView: View {
       VStack(alignment: .leading, spacing: 6) {
         Text(greeting).font(.brand(size: 28, .heavy)).accessibilityAddTraits(.isHeader)
         if let resting = store.latestRestingHR {
-          Label(store.t("Resting HR: ", "Tętno spocz.: ") + "\(resting)", systemImage: "applewatch")
+          Label(store.t("Resting HR: ", "Tętno spocz.: ") + "\(resting)", systemImage: "heart.fill")
             .font(.brand(.footnote, .bold)).accessibilityIdentifier("restingHR")
         }
         TimelineView(.everyMinute) { context in
@@ -201,13 +192,6 @@ struct TodayView: View {
     }.foregroundStyle(onGradient ? .white : Theme.ink)
   }
 
-  private var privacyNote: some View {
-    Text(
-      store.t(
-        "Your observations stay on this device. No clinician monitors these entries in real time.",
-        "Twoje obserwacje pozostają na tym urządzeniu. Lekarz nie monitoruje wpisów na bieżąco.")
-    ).font(.brand(.footnote)).foregroundStyle(Theme.muted)
-  }
 
   // MARK: Data
 
@@ -517,11 +501,6 @@ struct DailySymptomForm: View {
         if selection == "custom" {
           TextField(store.t("Symptom name", "Nazwa objawu"), text: $custom)
         }
-        Text(
-          store.t(
-            "Earlier answers keep their original symptom.",
-            "Wcześniejsze odpowiedzi zachowują pierwotny objaw.")
-        ).font(.brand(.footnote))
       }
     }.onAppear { selection = observation.symptom ?? "" }
   }
@@ -547,11 +526,6 @@ struct AddVisitCard: View {
         Text(store.t("Add visit", "Dodaj wizytę")).font(.brand(size: 20, .heavy))
         Text(store.t("Choose another doctor", "Wybierz kolejnego lekarza")).font(
           .subheadline.weight(.semibold))
-        Text(
-          store.t(
-            "Daily symptom questions will appear here after you add a visit.",
-            "Tu pojawią się codzienne pytania o objawy po dodaniu wizyty.")
-        ).font(.brand(.footnote)).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
       }.padding(24).frame(maxWidth: .infinity, minHeight: 380).foregroundStyle(Theme.ink)
         .background(.white.opacity(0.35), in: RoundedRectangle(cornerRadius: 28))
         .overlay(
@@ -577,12 +551,6 @@ struct MedicationPlanCard: View {
             .foregroundStyle(Theme.muted)
         }
         ForEach(doses) { dose in DoseRow(dose: dose) }
-        Text(
-          store.t(
-            "Confirm only what you have actually taken. Follow the prescription for missed doses.",
-            "Potwierdzaj tylko faktycznie przyjęte dawki. W przypadku pominięcia dawki postępuj zgodnie z zaleceniami."
-          )
-        ).font(.brand(.footnote)).foregroundStyle(Theme.muted)
       }
     }
   }

@@ -48,19 +48,17 @@ struct SettingsView: View {
             .onSubmit(saveName).accessibilityIdentifier("profileName")
           Button(store.t("Save name", "Zapisz imię"), action: saveName)
             .disabled(trimmedName == (store.state.profileName ?? "") || trimmedName.count > 100)
-          Text(
-            store.t(
-              "Used only for the greeting on the start screen.",
-              "Używane tylko do powitania na ekranie startowym.")
-          ).font(.brand(.footnote))
         }
-        Section(store.t("Apple Watch, Apple Health & Strava", "Apple Watch, Apple Health i Strava")) {
+        Section {
           NavigationLink {
             IntegrationsView()
           } label: {
-            Label(store.t("Connections", "Integracje"), systemImage: "applewatch")
+            HStack {
+              Label("Apple Health", systemImage: "heart.text.square")
+              Spacer()
+              Text(connectionSummary).font(.brand(.footnote)).foregroundStyle(Theme.muted)
+            }
           }.accessibilityIdentifier("openIntegrations")
-          Text(connectionSummary).font(.brand(.footnote))
         }
         Section(store.t("Reminders", "Przypomnienia")) {
           Toggle(
@@ -74,22 +72,11 @@ struct SettingsView: View {
                   _ = store.change { $0.remindersEnabled = false }
                 }
               }))
-          Text(store.notificationStatus).font(.brand(.footnote))
-          Button(store.t("Refresh schedule", "Odśwież harmonogram")) {
-            Task { await store.refreshNotifications() }
-          }
           #if os(iOS)
             Link(
-              store.t(
-                "Open system notification settings", "Otwórz systemowe ustawienia powiadomień"),
+              store.t("System notification settings", "Systemowe ustawienia powiadomień"),
               destination: URL(string: UIApplication.openSettingsURLString)!)
           #endif
-          Text(
-            store.t(
-              "Notifications hide medication names. Delivery depends on system settings; opening the app extends the scheduled queue. No guarantee when the device is off.",
-              "Powiadomienia ukrywają nazwy leków. Dostarczenie zależy od ustawień systemu; otwarcie aplikacji przedłuża kolejkę. Brak gwarancji przy wyłączonym urządzeniu."
-            )
-          ).font(.brand(.footnote))
         }
       }
       Section(store.t("Backup and transfer", "Kopia zapasowa i przenoszenie")) {
@@ -104,37 +91,25 @@ struct SettingsView: View {
         Button(store.t("Import backup / Windows 0.4.0", "Importuj kopię / Windows 0.4.0")) {
           importing = true
         }
-        Text(
-          store.t(
-            "A backup contains sensitive records and attachments and is not password-encrypted. Choose a private destination. Import replaces current records after validation and saves the previous file locally.",
-            "Kopia zawiera wrażliwe wpisy i załączniki; nie jest szyfrowana hasłem. Wybierz prywatne miejsce. Import zastępuje dane po sprawdzeniu i zachowuje poprzedni plik lokalnie."
-          )
-        ).font(.brand(.footnote))
       }
       if !recovery {
-        Section(store.t("Getting help", "Uzyskanie pomocy")) {
+        Section(store.t("Urgent help", "Pilna pomoc")) {
           Text(
             store.t(
-              "Do not wait for the planned appointment if you think you need urgent medical help. This app does not assess urgency and no clinician monitors your entries.",
-              "Nie czekaj na zaplanowaną wizytę, jeśli uważasz, że potrzebujesz pilnej pomocy medycznej. Aplikacja nie ocenia pilności, a lekarz nie monitoruje wpisów."
-            ))
-          Text(
-            store.t(
-              "In Poland and the EU, the emergency number is 112. Outside the EU, use the local emergency number.",
-              "W Polsce i UE numer alarmowy to 112. Poza UE użyj lokalnego numeru alarmowego."))
+              "Feeling much worse? Don't wait for the visit.",
+              "Czujesz się dużo gorzej? Nie czekaj na wizytę."))
           #if os(iOS)
             Link(
               store.t("Call 112 (Poland / EU)", "Zadzwoń pod 112 (Polska / UE)"),
               destination: URL(string: "tel:112")!)
           #endif
         }
-        Section(store.t("About your data", "O Twoich danych")) {
+        Section {
           Text(
             store.t(
-              "Local storage. No account, analytics or automatic sync. Data can be transferred by backup. Device backups may follow your Apple settings.",
-              "Dane lokalne. Bez konta, analityki i automatycznej synchronizacji. Dane można przenieść przez kopię zapasową. Kopie urządzenia zależą od ustawień Apple."
-            ))
-          Text("SymptoPage 0.6.0 · iOS").font(.brand(.caption))
+              "Data stays on this device. No account, no analytics.",
+              "Dane zostają na tym urządzeniu. Bez konta i analityki."))
+          Text("SymptoPage 0.9.0").font(.brand(.caption))
         }
       }
     }.formStyle(.grouped).scrollContentBackground(.hidden).background(Color(hex: 0xF4FAF9))
@@ -183,10 +158,9 @@ struct SettingsView: View {
   }
   private var connectionSummary: String {
     let parts = [
-      store.state.integrations.healthEnabled ? "Apple Health ✓" : nil,
-      store.state.integrations.stravaAthlete.map { "Strava ✓ " + $0 },
+      store.state.integrations.healthEnabled ? store.t("Connected", "Połączono") : nil
     ].compactMap { $0 }
-    return parts.isEmpty ? store.t("Not connected", "Nie połączono") : parts.joined(separator: " · ")
+    return parts.first ?? store.t("Off", "Wył.")
   }
   private func saveName() {
     guard trimmedName.count <= 100 else { return }
