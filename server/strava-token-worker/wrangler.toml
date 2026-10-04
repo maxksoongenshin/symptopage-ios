@@ -1,0 +1,8 @@
+name = "symptopage-strava-token"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Public, not secret. Put your Strava API application's Client ID here.
+STRAVA_CLIENT_ID = "REPLACE_WITH_CLIENT_ID"
+# The secret is set with: npx wrangler secret put STRAVA_CLIENT_SECRET
